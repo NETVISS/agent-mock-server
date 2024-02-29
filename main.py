@@ -7,7 +7,6 @@ from getmac import get_mac_address
 #Read the IP and PORT from environment
 IP = '0.0.0.0'
 PORT = '5000'
-VERIFY_CLIENT_MAC = ''
 MID_FILE_PATH = './mid.json'
 
 def get_props():
@@ -170,45 +169,28 @@ async def handle_client(websocket):
                 await disconnect_client(client)
             match event:
                 case 'register':
-                    if verification['status']:
-                        if verification['client']['machine_id'] != data:
-                            update_machine_id(data,verification['client']['mac'])
-                        props = get_props()
-                        res = {
-                                "status":True,
-                                "message":'Properties are fetched.',
-                                "properties":props
-                            }
-                        res = json.dumps(res)
-                        await websocket.send(f"{res}")
-                        ACTIVE_CLIENTS[client]['machine_id'] = data
-                        if props['status'] == False:
-                            await disconnect_client(client)
-                    else:
-                        await disconnect_client(client)
+                    props = get_props()
+                    res = {
+                            "status":True,
+                            "message":'Properties are fetched.',
+                            "properties":props
+                        }
+                    res = json.dumps(res)
+                    await websocket.send(f"{res}")
+                    await disconnect_client(client)
                 case 'send_properties':
                     message = ''
                     status = False
-                    verification = await verify_client(client)
-                    print(verification['client']['machine_id'],ACTIVE_CLIENTS[client]['machine_id'])
-                    if verification['status'] and verification['client']['machine_id'] == ACTIVE_CLIENTS[client]['machine_id']:
-                        if data.get('code') and data.get('attributes'):
-                           status = True
-                           print(
-                               data.get('code'),
-                               data.get('attributes')
-                           )
-                        else:
-                            message = "Data format is not valid."
-                            print("Info :-> ","Data format is not valid.")
-                        res = json.dumps({"status":status,"message":message})
-                        await websocket.send(f"{res}")
-                    else:
-                        message = "Verification is failed."
-                        print("Info :-> ","Verification is failed.")
-                        res = json.dumps({"status":status,"message":message})
-                        await websocket.send(f"{res}")
-                        await disconnect_client(client)
+                    print(
+                            data.get('code'),
+                            data.get('attributes')
+                        )
+                    res = {
+                            "status":True,
+                            "message":'Attribute get.',
+                        }
+                    res = json.dumps(res)
+                    await websocket.send(f"{res}")
                 case 'disconnect':
                     await disconnect_client(client)
     else:   
